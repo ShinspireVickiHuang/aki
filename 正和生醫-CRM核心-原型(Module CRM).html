@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正和生醫後台 - CRM 核心 (Module CRM)</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; --muted:#64748b;}
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', 'Helvetica Neue', Arial, 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; color: var(--text); }
+        .sidebar { width: 250px; background: #0b1222; color: white; display: flex; flex-direction: column; padding: 20px; }
+        .sidebar h2 { font-size: 1.2rem; margin-bottom: 1.5rem; color: #38bdf8; display: flex; align-items: center; gap: 10px; }
+        .nav-item { padding: 12px 14px; color: #9aa7bf; text-decoration: none; border-radius: 8px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .nav-item:hover { background: #152036; color: #fff; }
+        .nav-item.active { background: #1b2a4a; color: #fff; }
+        .main { flex: 1; padding: 24px 28px; overflow-y: auto; }
+        .header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; }
+        .header h1 { margin: 0; font-size: 1.6rem; }
+        .btn { padding: 8px 14px; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; transition: .2s; }
+        .btn:hover { background: #f8fafc; transform: translateY(-1px); }
+        .card { background: var(--card); padding: 18px; border-radius: 12px; box-shadow: 0 6px 14px -8px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; margin-bottom: 20px; }
+        .card:hover { box-shadow: 0 10px 24px -12px rgba(0,0,0,0.3); }
+        /* Tickets */
+        .ticket-list { margin-top: 8px; }
+        .ticket-item { display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding: 12px 0; align-items: center; }
+        .ticket-priority { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; display:inline-block; }
+        .p-high { background: #fee2e2; color: #991b1b; border:1px solid #fecaca; }
+        .p-med { background: #ffedd5; color: #9a3412; border:1px solid #fed7aa; }
+        .ticket-actions { display:flex; gap:8px; }
+        .btn-small { padding:6px 10px; border:1px solid #cbd5e1; background:#fff; border-radius:6px; cursor:pointer; }
+        .btn-small:hover { background:#f8fafc; }
+        /* Logs */
+        .log-list { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.85rem; background: #111827; color: #e5e7eb; padding: 12px; border-radius: 8px; max-height: 220px; overflow-y: auto; border:1px solid #1f2937; }
+        .log-entry { margin-bottom: 4px; border-bottom: 1px dashed #374151; padding-bottom: 4px; }
+        .log-success { color: #4ade80; }
+        .log-fail { color: #f87171; }
+        /* Tags */
+        .tag-wrap { display: flex; gap: 10px; flex-wrap: wrap; }
+        .tag-chip { display:inline-flex; gap:6px; align-items:center; padding: 6px 10px; border-radius: 16px; border: 1px solid; font-size: 0.82rem; }
+        .tag-blue { background: #e0f2fe; color: #0284c7; border-color:#bae6fd; }
+        .tag-green { background: #dcfce7; color: #166534; border-color:#bbf7d0; }
+        .tag-purple { background: #fae8ff; color: #86198f; border-color:#f0abfc; }
+        .tag-x { cursor:pointer; color:#475569; }
+        .add-tag { background: white; border: 1px dashed #cbd5e1; padding: 6px 10px; border-radius: 16px; cursor: pointer; font-size:0.82rem; }
+        /* Responsive */
+        @media (max-width: 720px) {
+          .sidebar { position: fixed; z-index: 20; transform: translateX(-100%); transition: .3s; }
+          .sidebar.open { transform: translateX(0); }
+          .main { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <h2><i class="fa-solid fa-heart-pulse"></i> 正和生醫</h2>
+        <a href="module_a.html" class="nav-item"><i class="fa-solid fa-chart-line"></i> 營運與財務 (A)</a>
+        <a href="module_b.html" class="nav-item"><i class="fa-solid fa-user-clock"></i> 產能分析 (B)</a>
+        <a href="module_c.html" class="nav-item"><i class="fa-solid fa-users"></i> 客戶結構 (C)</a>
+        <a href="module_d.html" class="nav-item"><i class="fa-solid fa-list-check"></i> 名單管理 (D)</a>
+        <a href="module_e.html" class="nav-item"><i class="fa-solid fa-bullhorn"></i> 行銷成效 (E)</a>
+        <a href="module_crm_core.html" class="nav-item active"><i class="fa-solid fa-headset"></i> CRM 核心</a>
+    </div>
+
+    <div class="main">
+        <div class="header">
+            <h1>CRM 核心設定與客服工單</h1>
+            <div style="display:flex; gap:8px;">
+                <button class="btn" id="toggleMenu" title="開合側邊選單"><i class="fa-solid fa-bars"></i></button>
+                <button class="btn" id="newTicket"><i class="fa-solid fa-plus"></i> 新增工單</button>
+            </div>
+        </div>
+
+        <!-- CRM-9: Tickets -->
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;">CRM-9 待處理工單（低分／客訴）</h3>
+                <span id="todoCount" style="background: #ef4444; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;">3 件待辦</span>
+            </div>
+            <div class="ticket-list" id="ticketList">
+                <div class="ticket-item">
+                    <div>
+                        <span class="ticket-priority p-high">High</span>
+                        <strong>林先生（0912-xxx）- 問卷評分 2分</strong>
+                        <div style="font-size: 0.9rem; color: var(--muted); margin-top: 5px;">意見：等待時間過長，預約 2 點結果 2:30 才看到...</div>
+                    </div>
+                    <div class="ticket-actions">
+                        <button class="btn-small" data-action="assign">指派</button>
+                        <button class="btn-small" data-action="resolve">處理</button>
+                    </div>
+                </div>
+                <div class="ticket-item">
+                    <div>
+                        <span class="ticket-priority p-med">Med</span>
+                        <strong>陳小姐（0988-xxx）- 課程諮詢需求</strong>
+                        <div style="font-size: 0.9rem; color: var(--muted); margin-top: 5px;">意見：想了解高階整復方案，請專人回電。</div>
+                    </div>
+                    <div class="ticket-actions">
+                        <button class="btn-small" data-action="assign">指派</button>
+                        <button class="btn-small" data-action="resolve">處理</button>
+                    </div>
+                </div>
+                <div class="ticket-item">
+                    <div>
+                        <span class="ticket-priority p-high">High</span>
+                        <strong>王小姐（0910-xxx）- 問卷評分 1分</strong>
+                        <div style="font-size: 0.9rem; color: var(--muted); margin-top: 5px;">意見：現場導引不清楚，停車資訊不足。</div>
+                    </div>
+                    <div class="ticket-actions">
+                        <button class="btn-small" data-action="assign">指派</button>
+                        <button class="btn-small" data-action="resolve">處理</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CRM-1: Automation Logs -->
+        <div class="card">
+            <h3 style="margin:0 0 8px 0;">CRM-1 自動化發送紀錄（預約提醒）</h3>
+            <div class="log-list" id="logList">
+                <div class="log-entry">[10:00:01] System: Start Job 'Appointment_Reminder_24h'</div>
+                <div class="log-entry">[10:00:02] <span class="log-success">SUCCESS</span> Sent LINE to User:U1001 (Template: TPM-01)</div>
+                <div class="log-entry">[10:00:02] <span class="log-success">SUCCESS</span> Sent SMS to User:U1005 (0912-333-xxx)</div>
+                <div class="log-entry">[10:00:03] <span class="log-fail">FAILED</span> User:U1008 (Invalid Phone Number)</div>
+                <div class="log-entry">[10:00:05] System: Job Finished. Total: 3, Success: 2, Fail: 1</div>
+            </div>
+            <div style="margin-top:8px; display:flex; gap:8px;">
+                <button class="btn" id="refreshLog"><i class="fa-solid fa-rotate-right"></i> 更新紀錄</button>
+                <button class="btn" id="exportLog"><i class="fa-regular fa-file-lines"></i> 匯出 Log</button>
+            </div>
+        </div>
+
+        <!-- CRM-6: Tags -->
+        <div class="card">
+            <h3 style="margin:0 0 8px 0;">CRM-6 會員分眾標籤管理（全域）</h3>
+            <div class="tag-wrap" id="tagWrap">
+                <span class="tag-chip tag-blue">來源：網路廣告 <i class="fa-solid fa-xmark tag-x" title="刪除"></i></span>
+                <span class="tag-chip tag-blue">來源：親友介紹 <i class="fa-solid fa-xmark tag-x" title="刪除"></i></span>
+                <span class="tag-chip tag-green">主訴：腰椎 <i class="fa-solid fa-xmark tag-x" title="刪除"></i></span>
+                <span class="tag-chip tag-green">主訴：肩頸 <i class="fa-solid fa-xmark tag-x" title="刪除"></i></span>
+                <span class="tag-chip tag-purple">身份：股東 <i class="fa-solid fa-xmark tag-x" title="刪除"></i></span>
+                <button class="add-tag" id="addTagBtn">+ 新增標籤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      // 側邊選單開合
+      const toggleMenu = document.getElementById('toggleMenu');
+      const sidebar = document.getElementById('sidebar');
+      toggleMenu?.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+      // 新增工單原型
+      document.getElementById('newTicket')?.addEventListener('click', () => {
+        alert('原型功能：開啟「新增工單」表單（尚未串接）。');
+      });
+
+      // 工單按鈕原型行為
+      document.querySelectorAll('.ticket-actions .btn-small').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.getAttribute('data-action');
+          const msg = action === 'assign'
+            ? '原型提示：將此工單指派給指定人員（尚未串接）。'
+            : '原型提示：將進入工單詳情進行處理（尚未串接）。';
+          alert(msg);
+        });
+      });
+
+      // Log：自動滾到底 & 按鈕原型
+      const logList = document.getElementById('logList');
+      logList.scrollTop = logList.scrollHeight;
+      document.getElementById('refreshLog')?.addEventListener('click', () => {
+        const now = new Date().toLocaleTimeString('zh-TW', { hour12:false });
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        div.innerHTML = \`[\${now}] <span class="log-success">SUCCESS</span> 模擬更新一筆紀錄\`;
+        logList.appendChild(div);
+        logList.scrollTop = logList.scrollHeight;
+      });
+      document.getElementById('exportLog')?.addEventListener('click', () => {
+        alert('原型功能：匯出目前顯示的自動化紀錄（尚未串接）。');
+      });
+
+      // Tag 管理原型：刪除與新增
+      const tagWrap = document.getElementById('tagWrap');
+      tagWrap.addEventListener('click', (e) => {
+        if (e.target.classList.contains('tag-x')) {
+          const chip = e.target.closest('.tag-chip');
+          chip?.remove();
+        }
+      });
+      document.getElementById('addTagBtn')?.addEventListener('click', () => {
+        const name = prompt('輸入新標籤文字（例如：身份：董事長）');
+        if (!name) return;
+        const span = document.createElement('span');
+        span.className = 'tag-chip tag-blue';
+        span.innerHTML = \`\${name} <i class="fa-solid fa-xmark tag-x" title="刪除"></i>\`;
+        tagWrap.insertBefore(span, document.getElementById('addTagBtn'));
+      });
+    </script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正和生醫後台 - 行銷成效 (Module E)</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; --muted:#64748b;}
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', 'Helvetica Neue', Arial, 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; color: var(--text); }
+        .sidebar { width: 250px; background: #0b1222; color: white; display: flex; flex-direction: column; padding: 20px; }
+        .sidebar h2 { font-size: 1.2rem; margin-bottom: 1.5rem; color: #38bdf8; display: flex; align-items: center; gap: 10px; }
+        .nav-item { padding: 12px 14px; color: #9aa7bf; text-decoration: none; border-radius: 8px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .nav-item:hover { background: #152036; color: #fff; }
+        .nav-item.active { background: #1b2a4a; color: #fff; }
+        .main { flex: 1; padding: 24px 28px; overflow-y: auto; }
+        .header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; }
+        .header h1 { margin: 0; font-size: 1.6rem; }
+        .btn { padding: 8px 14px; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; transition: .2s; }
+        .btn:hover { background: #f8fafc; transform: translateY(-1px); }
+        .card { background: var(--card); padding: 18px; border-radius: 12px; box-shadow: 0 6px 14px -8px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; margin-bottom: 20px; }
+        .card:hover { box-shadow: 0 10px 24px -12px rgba(0,0,0,0.3); }
+        /* Lifecycle Section */
+        .lifecycle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .lifecycle-card { background: linear-gradient(135deg, #4f46e5, #3b82f6); color: white; padding: 20px; border-radius: 12px; position: relative; overflow: hidden; }
+        .lifecycle-card h3 { margin: 0 0 10px 0; font-size: 1.05rem; opacity: 0.95; }
+        .lifecycle-count { font-size: 2.4rem; font-weight: 800; }
+        .lifecycle-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.25); color: white; padding: 6px 14px; border-radius: 20px; cursor: pointer; margin-top: 10px; font-size: 0.9rem; transition:.2s; }
+        .lifecycle-btn:hover { background: rgba(255,255,255,0.28); }
+        .lifecycle-card.warning { background: linear-gradient(135deg, #f97316, #ea580c); }
+        /* Campaign Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; padding: 12px; background: #f8fafc; color: var(--muted); font-size: 0.9rem; border-bottom:1px solid #e2e8f0; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size:0.95rem; }
+        tbody tr:hover td { background:#f8fafc; }
+        code { background:#f1f5f9; padding:2px 6px; border-radius:4px; }
+        /* Responsive */
+        @media (max-width: 960px) {
+          .lifecycle-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 720px) {
+          .sidebar { position: fixed; z-index: 20; transform: translateX(-100%); transition: .3s; }
+          .sidebar.open { transform: translateX(0); }
+          .main { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <h2><i class="fa-solid fa-heart-pulse"></i> 正和生醫</h2>
+        <a href="module_a.html" class="nav-item"><i class="fa-solid fa-chart-line"></i> 營運與財務 (A)</a>
+        <a href="module_b.html" class="nav-item"><i class="fa-solid fa-user-clock"></i> 產能分析 (B)</a>
+        <a href="module_c.html" class="nav-item"><i class="fa-solid fa-users"></i> 客戶結構 (C)</a>
+        <a href="module_d.html" class="nav-item"><i class="fa-solid fa-list-check"></i> 名單管理 (D)</a>
+        <a href="module_e.html" class="nav-item active"><i class="fa-solid fa-bullhorn"></i> 行銷成效 (E)</a>
+        <a href="module_crm_core.html" class="nav-item"><i class="fa-solid fa-headset"></i> CRM 核心</a>
+    </div>
+
+    <div class="main">
+        <div class="header">
+            <h1>行銷活動與成效分析</h1>
+            <div style="display:flex; gap:8px;">
+                <button class="btn" id="toggleMenu" title="開合側邊選單"><i class="fa-solid fa-bars"></i></button>
+                <button class="btn" id="newCampaign"><i class="fa-solid fa-plus"></i> 新建活動</button>
+            </div>
+        </div>
+
+        <!-- E-3: Lifecycle Automation -->
+        <h3 style="margin-bottom: 10px; color: var(--muted);">今日需處理（E-3 自動提醒）</h3>
+        <div class="lifecycle-grid">
+            <div class="lifecycle-card">
+                <h3>🎂 本日壽星</h3>
+                <div class="lifecycle-count">12 人</div>
+                <button class="lifecycle-btn" data-action="coupon">發送祝福券</button>
+                <i class="fa-solid fa-cake-candles" style="position: absolute; right: 20px; bottom: 20px; font-size: 3rem; opacity: 0.3;"></i>
+            </div>
+            <div class="lifecycle-card warning">
+                <h3>😴 沉睡喚回（>90天）</h3>
+                <div class="lifecycle-count">45 人</div>
+                <button class="lifecycle-btn" data-action="task">建立喚回任務</button>
+                <i class="fa-solid fa-bell" style="position: absolute; right: 20px; bottom: 20px; font-size: 3rem; opacity: 0.3;"></i>
+            </div>
+            <div class="lifecycle-card" style="background: linear-gradient(135deg, #10b981, #059669);">
+                <h3>✨ 新客關懷（昨日首訪）</h3>
+                <div class="lifecycle-count">8 人</div>
+                <button class="lifecycle-btn" data-action="survey">發送滿意度</button>
+                <i class="fa-solid fa-hand-holding-heart" style="position: absolute; right: 20px; bottom: 20px; font-size: 3rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+
+        <!-- E-1: Campaign ROI -->
+        <div class="card">
+            <h3 style="margin:0 0 6px 0;">E-1 行銷活動成效總表</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>活動代碼（Campaign ID）</th>
+                        <th>活動名稱</th>
+                        <th>類型</th>
+                        <th>目標名單數</th>
+                        <th>預約數（轉換率）</th>
+                        <th>認列營收（ROI）</th>
+                        <th>狀態</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>CMP-202312-BDAY</code></td>
+                        <td>12月壽星禮遇</td>
+                        <td>生日</td>
+                        <td>300</td>
+                        <td>45（15%）</td>
+                        <td>$180,000</td>
+                        <td><span style="color: #16a34a;">● 進行中</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>CMP-202311-SLEEP</code></td>
+                        <td>Q4 沉睡客喚回</td>
+                        <td>喚回</td>
+                        <td>500</td>
+                        <td>25（5%）</td>
+                        <td>$65,000</td>
+                        <td><span style="color: #6b7280;">● 已結束</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>CMP-202312-XMAS</code></td>
+                        <td>聖誕節限時促銷</td>
+                        <td>促銷</td>
+                        <td>1,200</td>
+                        <td>120（10%）</td>
+                        <td>$360,000</td>
+                        <td><span style="color: #16a34a;">● 進行中</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+      // 側邊選單開合
+      const toggleMenu = document.getElementById('toggleMenu');
+      const sidebar = document.getElementById('sidebar');
+      toggleMenu?.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+      // Lifecycle 行為原型
+      document.querySelectorAll('.lifecycle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.getAttribute('data-action');
+          const map = {
+            coupon: '將針對「本日壽星」名單發送生日祝福券（原型提示，尚未串接）。',
+            task: '將建立「沉睡客喚回」任務，並指派至客服（原型提示，尚未串接）。',
+            survey: '將向「昨日首訪新客」發送滿意度調查（原型提示，尚未串接）。'
+          };
+          alert(map[action] || '原型提示：尚未串接。');
+        });
+      });
+
+      // 新建活動原型
+      document.getElementById('newCampaign')?.addEventListener('click', () => {
+        alert('原型功能：開啟「新建行銷活動」表單（尚未開發）。');
+      });
+    </script>
+</body>
+</html>

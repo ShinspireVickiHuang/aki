@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正和生醫後台 - 營運績效 (Module A)</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --danger: #dc2626; --warning: #d97706; --success: #16a34a; --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; --muted:#64748b;}
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', 'Helvetica Neue', Arial, 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; color: var(--text); }
+        
+        /* Layout */
+        .sidebar { width: 250px; background: #0b1222; color: white; display: flex; flex-direction: column; padding: 20px; }
+        .sidebar h2 { font-size: 1.2rem; margin-bottom: 1.5rem; color: #38bdf8; display: flex; align-items: center; gap: 10px; }
+        .nav-item { padding: 12px 14px; color: #9aa7bf; text-decoration: none; border-radius: 8px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .nav-item:hover { background: #152036; color: #fff; }
+        .nav-item.active { background: #1b2a4a; color: #fff; }
+        
+        .main { flex: 1; padding: 24px 28px; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .header h1 { margin: 0; font-size: 1.6rem; }
+        .header .sub { color: var(--muted); font-size: 0.9rem; }
+        .btn { padding: 8px 14px; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; transition: .2s; }
+        .btn:hover { background: #f8fafc; transform: translateY(-1px); }
+        
+        /* Cards */
+        .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .card { background: var(--card); padding: 18px; border-radius: 12px; box-shadow: 0 6px 14px -8px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; }
+        .card:hover { box-shadow: 0 10px 24px -12px rgba(0,0,0,0.3); }
+        .card-title { font-size: 0.95rem; color: var(--muted); margin-bottom: 8px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--text); }
+        .stat-sub { font-size: 0.875rem; margin-top: 6px; }
+        .trend-up { color: var(--success); } .trend-down { color: var(--danger); }
+        .badge { padding: 4px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; border: 1px solid transparent; }
+        .badge-danger { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+        .badge-success { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+        
+        /* Components */
+        .alert-box { background: #fef2f2; border: 1px solid #fee2e2; color: #991b1b; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; }
+        
+        /* CSS Chart Simulation */
+        .chart-legend { display: flex; gap: 16px; margin-bottom: 12px; font-size: 0.9rem; color: #334155; }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .chart-container { height: 300px; display: flex; align-items: flex-end; gap: 18px; padding-top: 16px; border-bottom: 1px solid #e2e8f0; position: relative; }
+        .bar-group { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; height: 100%; position: relative; cursor: pointer; }
+        .bar { width: 100%; background: var(--primary); border-radius: 6px 6px 0 0; position: relative; transition: 0.25s; }
+        .bar:hover { filter: brightness(1.02); transform: translateY(-2px); }
+        .line-point { width: 12px; height: 12px; background: var(--warning); border-radius: 50%; border: 2px solid white; position: absolute; left: 50%; transform: translateX(-50%); z-index: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .month-label { text-align: center; margin-top: 10px; font-size: 0.85rem; color: var(--muted); }
+        
+        /* Table */
+        .table-card { overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; color: var(--muted); font-weight: 700; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+        tr:hover td { background: #f8fafc; }
+        th.sortable { cursor: pointer; user-select: none; }
+        th.sortable i { opacity: 0.5; margin-left: 6px; }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+          .grid-4 { grid-template-columns: repeat(2, 1fr); }
+          .grid-2 { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 720px) {
+          .sidebar { position: fixed; z-index: 20; transform: translateX(-100%); transition: .3s; }
+          .sidebar.open { transform: translateX(0); }
+          .main { padding: 16px; }
+          .grid-4 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <h2><i class="fa-solid fa-heart-pulse"></i> 正和生醫</h2>
+        <a href="#" class="nav-item active"><i class="fa-solid fa-chart-line"></i> 營運與財務 (A)</a>
+        <a href="#" class="nav-item"><i class="fa-solid fa-user-clock"></i> 產能分析 (B)</a>
+        <a href="#" class="nav-item"><i class="fa-solid fa-users"></i> 客戶結構 (C)</a>
+        <a href="#" class="nav-item"><i class="fa-solid fa-list-check"></i> 名單管理 (D)</a>
+        <a href="#" class="nav-item"><i class="fa-solid fa-bullhorn"></i> 行銷成效 (E)</a>
+        <a href="#" class="nav-item"><i class="fa-solid fa-headset"></i> CRM 核心</a>
+    </div>
+
+    <div class="main">
+        <div class="header">
+            <div>
+                <h1>營運績效儀表板</h1>
+                <div class="sub">資料期間: 2023/10/01 - 2023/12/31</div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button class="btn" id="toggleMenu" title="開合側邊選單"><i class="fa-solid fa-bars"></i></button>
+                <button class="btn" id="exportBtn"><i class="fa-regular fa-file-excel"></i> 匯出 Excel</button>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid-4">
+            <div class="card">
+                <div class="card-title">總業績 (含掛帳) <i class="fa-solid fa-sack-dollar"></i></div>
+                <div class="stat-value">$2,450,000</div>
+                <div class="stat-sub trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +12.5%</div>
+            </div>
+            <div class="card">
+                <div class="card-title">認列執行營收 <i class="fa-solid fa-file-invoice-dollar"></i></div>
+                <div class="stat-value">$1,850,000</div>
+                <div class="stat-sub" style="color: var(--muted);">實收比率: 75.5%</div>
+            </div>
+            <div class="card">
+                <div class="card-title">本月折讓率 <i class="fa-solid fa-tags"></i></div>
+                <div class="stat-value" style="color: var(--danger);">18.2%</div>
+                <div class="stat-sub" style="color: var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> 超出上限 (15%)</div>
+            </div>
+            <div class="card">
+                <div class="card-title">平均客單價 <i class="fa-solid fa-basket-shopping"></i></div>
+                <div class="stat-value">$3,200</div>
+                <div class="stat-sub trend-up">折前 $3,900</div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <!-- A-2: Monthly Performance & Inventory Depletion -->
+            <div class="card">
+                <div class="card-title">
+                    <span>月度營收 vs 認列 (庫存去化分析)</span>
+                    <span class="badge badge-danger">12月為庫存去化期</span>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item"><div class="dot" style="background: var(--primary);"></div> 總業績 (進帳)</div>
+                    <div class="legend-item"><div class="dot" style="background: var(--warning);"></div> 認列營收 (執行)</div>
+                </div>
+                <div class="chart-container">
+                    <!-- Oct -->
+                    <div class="bar-group" title="10月：總業績 70萬 / 認列 50萬">
+                        <div class="line-point" style="bottom: 50%;"></div>
+                        <div class="bar" style="height: 70%;"></div>
+                        <div class="month-label">10月</div>
+                    </div>
+                    <!-- Nov -->
+                    <div class="bar-group" title="11月：總業績 80萬 / 認列 60萬">
+                        <div class="line-point" style="bottom: 60%;"></div>
+                        <div class="bar" style="height: 80%;"></div>
+                        <div class="month-label">11月</div>
+                    </div>
+                    <!-- Dec: Inventory Depletion (Recognized > Total) -->
+                    <div class="bar-group" title="12月：總業績 60萬 / 認列 85萬 (庫存去化)">
+                        <div class="line-point" style="bottom: 85%;"></div>
+                        <div class="bar" style="height: 60%; background: #94a3b8;"></div>
+                        <div class="month-label">12月 <i class="fa-solid fa-circle-exclamation" style="color:#ef4444;"></i></div>
+                        <div class="alert-box" style="position: absolute; top: 10%; right: 0; width: 180px;">
+                            <i class="fa-solid fa-info-circle"></i> 12月認列 > 總業績，正在去化庫存
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- A-3: Discount Quality -->
+            <div class="card">
+                <div class="card-title">折讓品質監控</div>
+                <div style="margin-top: 14px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span>正常折讓 (VIP/會員)</span>
+                        <span>10%</span>
+                    </div>
+                    <div style="background: #e2e8f0; height: 8px; border-radius: 4px; margin-bottom: 12px;">
+                        <div style="background: #16a34a; width: 60%; height: 100%; border-radius: 4px;"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span>行銷活動 (Campaign)</span>
+                        <span>5%</span>
+                    </div>
+                    <div style="background: #e2e8f0; height: 8px; border-radius: 4px; margin-bottom: 12px;">
+                        <div style="background: #3b82f6; width: 30%; height: 100%; border-radius: 4px;"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: var(--danger); font-weight: bold;">
+                        <span>超額/異常折讓</span>
+                        <span>3.2%</span>
+                    </div>
+                    <div style="background: #e2e8f0; height: 8px; border-radius: 4px; margin-bottom: 12px;">
+                        <div style="background: var(--danger); width: 20%; height: 100%; border-radius: 4px;"></div>
+                    </div>
+                </div>
+                <div class="alert-box">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    本月折讓率 18.2% 已超過設定上限 (15%)
+                </div>
+            </div>
+        </div>
+
+        <!-- A-1 & A-4: Staff Performance Table -->
+        <div class="card table-card">
+            <div class="card-title">人員營收績效與產能 (A-1/A-4)</div>
+            <table id="staffTable">
+                <thead>
+                    <tr>
+                        <th>技術人員</th>
+                        <th class="sortable" data-key="revenue">總營收 (含折讓) <i class="fa-solid fa-sort"></i></th>
+                        <th class="sortable" data-key="capacityShare">產能佔比 <i class="fa-solid fa-sort"></i></th>
+                        <th class="sortable" data-key="relativeCap">相對產能 (Base=1.0) <i class="fa-solid fa-sort"></i></th>
+                        <th class="sortable" data-key="aov">客單價 <i class="fa-solid fa-sort"></i></th>
+                        <th class="sortable" data-key="discount">折讓率 <i class="fa-solid fa-sort"></i></th>
+                        <th>狀態</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>陳醫師 (院長)</strong> <span class="badge badge-success">核心</span></td>
+                        <td data-value="1200000">$1,200,000</td>
+                        <td data-value="48">48%</td>
+                        <td data-value="1.0">1.0</td>
+                        <td data-value="4500">$4,500</td>
+                        <td data-value="5">5%</td>
+                        <td><span class="badge badge-success">正常</span></td>
+                    </tr>
+                    <tr>
+                        <td>林技師</td>
+                        <td data-value="600000">$600,000</td>
+                        <td data-value="24">24%</td>
+                        <td data-value="0.5">0.5</td>
+                        <td data-value="2800">$2,800</td>
+                        <td data-value="22"><span style="color: var(--danger); font-weight: 700;">22%</span></td>
+                        <td><span class="badge badge-danger">折讓過高</span></td>
+                    </tr>
+                    <tr>
+                        <td>張技師</td>
+                        <td data-value="650000">$650,000</td>
+                        <td data-value="26">26%</td>
+                        <td data-value="0.54">0.54</td>
+                        <td data-value="3100">$3,100</td>
+                        <td data-value="12">12%</td>
+                        <td><span class="badge badge-success">正常</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+      // 側邊選單切換（行動裝置）
+      const toggleMenu = document.getElementById('toggleMenu');
+      const sidebar = document.getElementById('sidebar');
+      toggleMenu?.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+      });
+
+      // 匯出 Excel：原型提示
+      document.getElementById('exportBtn')?.addEventListener('click', () => {
+        alert('原型功能：將匯出目前篩選的營運報表（尚未串接）');
+      });
+
+      // 表格排序（簡易原型，依 data-value 排序）
+      const table = document.getElementById('staffTable');
+      const getCellValue = (tr, selector) => {
+        const td = tr.querySelector(selector);
+        if (!td) return '';
+        const v = td.getAttribute('data-value');
+        return v !== null ? parseFloat(v) : td.textContent.trim();
+      };
+      const sortBy = (key, asc = true) => {
+        const rows = Array.from(table.tBodies[0].rows);
+        const idxMap = {
+          revenue: 1,
+          capacityShare: 2,
+          relativeCap: 3,
+          aov: 4,
+          discount: 5
+        };
+        const idx = idxMap[key];
+        rows.sort((a, b) => {
+          const va = parseFloat(a.cells[idx].getAttribute('data-value'));
+          const vb = parseFloat(b.cells[idx].getAttribute('data-value'));
+          if (isNaN(va) || isNaN(vb)) return 0;
+          return asc ? va - vb : vb - va;
+        });
+        rows.forEach(r => table.tBodies[0].appendChild(r));
+      };
+      let sortState = {};
+      document.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+          const key = th.getAttribute('data-key');
+          const asc = sortState[key] ? !sortState[key] : true;
+          sortState[key] = asc;
+          sortBy(key, asc);
+          // 更新排序圖示
+          document.querySelectorAll('th.sortable i').forEach(i => i.className = 'fa-solid fa-sort');
+          th.querySelector('i').className = asc ? 'fa-solid fa-sort-up' : 'fa-solid fa-sort-down';
+        });
+      });
+    </script>
+</body>
+</html>
