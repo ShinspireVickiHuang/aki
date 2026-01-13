@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正和生醫後台 - 產能分析 (Module B)</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --danger: #dc2626; --warning: #d97706; --success: #16a34a; --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; --muted:#64748b;}
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', 'Helvetica Neue', Arial, 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; color: var(--text); }
+        
+        /* Layout */
+        .sidebar { width: 250px; background: #0b1222; color: white; display: flex; flex-direction: column; padding: 20px; }
+        .sidebar h2 { font-size: 1.2rem; margin-bottom: 1.5rem; color: #38bdf8; display: flex; align-items: center; gap: 10px; }
+        .nav-item { padding: 12px 14px; color: #9aa7bf; text-decoration: none; border-radius: 8px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .nav-item:hover { background: #152036; color: #fff; }
+        .nav-item.active { background: #1b2a4a; color: #fff; }
+        
+        .main { flex: 1; padding: 24px 28px; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 1.6rem; }
+        .header .sub { color: var(--muted); font-size: 0.9rem; }
+        .btn { padding: 8px 14px; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; transition: .2s; }
+        .btn:hover { background: #f8fafc; transform: translateY(-1px); }
+        
+        /* Cards */
+        .card { background: var(--card); padding: 18px; border-radius: 12px; box-shadow: 0 6px 14px -8px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; margin-bottom: 20px; }
+        .card:hover { box-shadow: 0 10px 24px -12px rgba(0,0,0,0.3); }
+        .card-title { font-size: 1rem; color: var(--muted); margin-bottom: 10px; font-weight: 700; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; display:flex; align-items:center; justify-content:space-between; }
+        .badge { padding: 4px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; border: 1px solid transparent; }
+        .badge-danger { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+        .badge-success { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+        
+        /* Risk Gauge */
+        .risk-gauge { display: flex; align-items: center; gap: 20px; }
+        .gauge-bar-bg { flex: 1; height: 20px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+        .gauge-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #ef4444); width: 65%; transition: width .3s ease; }
+        
+        /* Heatmap */
+        .heatmap-legend { margin-bottom: 15px; display: flex; gap: 15px; font-size: 0.9rem; color: var(--muted); }
+        .legend-box { width:15px; height:15px; border-radius:3px; display:inline-block; }
+        .heatmap-container { display: grid; grid-template-columns: 80px repeat(7, 1fr); gap: 4px; }
+        .heatmap-header { text-align: center; font-weight: 600; padding: 10px; background: #f8fafc; color: var(--muted); border:1px solid #e2e8f0; border-radius:6px; }
+        .time-label { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 0.9rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; }
+        .cell { height: 50px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: rgba(0,0,0,0.7); transition: 0.2s; cursor: pointer; border:1px solid transparent; }
+        .cell:hover { transform: scale(1.05); border-color: #94a3b8; }
+        .lvl-0 { background: #f1f5f9; border-style: dashed; border-color: #cbd5e1; } /* Empty */
+        .lvl-1 { background: #dcfce7; } /* Low */
+        .lvl-2 { background: #86efac; } /* Med */
+        .lvl-3 { background: #fca5a5; } /* High */
+        .lvl-4 { background: #ef4444; color: white; font-weight: 700; } /* Full */
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+          .heatmap-container { grid-template-columns: 60px repeat(7, 1fr); }
+        }
+        @media (max-width: 720px) {
+          .sidebar { position: fixed; z-index: 20; transform: translateX(-100%); transition: .3s; }
+          .sidebar.open { transform: translateX(0); }
+          .main { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <h2><i class="fa-solid fa-heart-pulse"></i> 正和生醫</h2>
+        <a href="module_a.html" class="nav-item"><i class="fa-solid fa-chart-line"></i> 營運與財務 (A)</a>
+        <a href="module_b.html" class="nav-item active"><i class="fa-solid fa-user-clock"></i> 產能分析 (B)</a>
+        <a href="module_c.html" class="nav-item"><i class="fa-solid fa-users"></i> 客戶結構 (C)</a>
+        <a href="module_d.html" class="nav-item"><i class="fa-solid fa-list-check"></i> 名單管理 (D)</a>
+        <a href="module_e.html" class="nav-item"><i class="fa-solid fa-bullhorn"></i> 行銷成效 (E)</a>
+        <a href="module_crm_core.html" class="nav-item"><i class="fa-solid fa-headset"></i> CRM 核心</a>
+    </div>
+
+    <div class="main">
+        <div class="header">
+            <div>
+                <h1>產能與瓶頸分析</h1>
+                <div class="sub">檢視全館滿載率、閒置時段與核心人力依賴風險</div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button class="btn" id="toggleMenu" title="開合側邊選單"><i class="fa-solid fa-bars"></i></button>
+                <button class="btn" id="downloadHeatmap"><i class="fa-solid fa-download"></i> 下載熱力圖PNG</button>
+            </div>
+        </div>
+
+        <!-- B-2: Core Staff Risk -->
+        <div class="card">
+            <div class="card-title">
+              <span>B-2 單點依賴風險評估 (核心人力)</span>
+              <span class="badge badge-danger"><i class="fa-solid fa-triangle-exclamation"></i> 風險閾值 60%</span>
+            </div>
+            <div class="risk-gauge">
+                <div style="text-align: center; width: 160px;">
+                    <div id="coreShare" style="font-size: 2.4rem; font-weight: 800; color: #ef4444;">65%</div>
+                    <div style="font-size: 0.9rem; color: var(--muted);">核心群組營收佔比</div>
+                </div>
+                <div style="flex: 1;">
+                    <div class="gauge-bar-bg">
+                        <div class="gauge-fill" id="gaugeFill" style="width:65%;"></div>
+                    </div>
+                    <p style="font-size: 0.9rem; margin-top: 10px; color: var(--muted);">
+                        <i class="fa-solid fa-triangle-exclamation" style="color: #d97706;"></i> 
+                        警示：院長及核心醫師營收佔比過高（>60%），存在單點崩盤風險。
+                    </p>
+                </div>
+            </div>
+            <div style="margin-top:12px; display:flex; gap:10px; align-items:center;">
+                <label for="riskInput" style="font-size:0.9rem; color:var(--muted);">調整核心佔比：</label>
+                <input id="riskInput" type="range" min="30" max="90" value="65" style="flex:1;">
+                <span id="riskValue" style="width:48px; text-align:right; font-weight:700; color:#ef4444;">65%</span>
+            </div>
+        </div>
+
+        <!-- B-3: Operational Heatmap -->
+        <div class="card">
+            <div class="card-title">B-3 營運時段熱力圖（預約密度）</div>
+            
+            <div class="heatmap-legend">
+                <span style="display:flex; align-items:center; gap:6px;"><span class="legend-box" style="background:#f1f5f9; border:1px solid #ccc;"></span> 閒置</span>
+                <span style="display:flex; align-items:center; gap:6px;"><span class="legend-box" style="background:#dcfce7;"></span> 舒適</span>
+                <span style="display:flex; align-items:center; gap:6px;"><span class="legend-box" style="background:#86efac;"></span> 中度</span>
+                <span style="display:flex; align-items:center; gap:6px;"><span class="legend-box" style="background:#fca5a5;"></span> 高度</span>
+                <span style="display:flex; align-items:center; gap:6px;"><span class="legend-box" style="background:#ef4444;"></span> 滿載</span>
+            </div>
+
+            <div class="heatmap-container" id="heatmap">
+                <!-- Header -->
+                <div></div> <!-- Empty Corner -->
+                <div class="heatmap-header">週一</div>
+                <div class="heatmap-header">週二</div>
+                <div class="heatmap-header">週三</div>
+                <div class="heatmap-header">週四</div>
+                <div class="heatmap-header">週五</div>
+                <div class="heatmap-header">週六</div>
+                <div class="heatmap-header">週日</div>
+
+                <!-- Rows -->
+                <div class="time-label">10:00</div>
+                <div class="cell lvl-0" title="週一 10:00">0/6</div>
+                <div class="cell lvl-1" title="週二 10:00">2/6</div>
+                <div class="cell lvl-1" title="週三 10:00">1/6</div>
+                <div class="cell lvl-0" title="週四 10:00">0/6</div>
+                <div class="cell lvl-2" title="週五 10:00">3/6</div>
+                <div class="cell lvl-3" title="週六 10:00">5/6</div>
+                <div class="cell lvl-4" title="週日 10:00">6/6</div>
+
+                <div class="time-label">14:00</div>
+                <div class="cell lvl-1" title="週一 14

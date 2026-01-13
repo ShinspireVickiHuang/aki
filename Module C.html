@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正和生醫後台 - 客戶分析 (Module C)</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --danger:#dc2626; --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; --muted:#64748b;}
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', 'Helvetica Neue', Arial, 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; color: var(--text); }
+
+        /* Layout */
+        .sidebar { width: 250px; background: #0b1222; color: white; display: flex; flex-direction: column; padding: 20px; }
+        .sidebar h2 { font-size: 1.2rem; margin-bottom: 1.5rem; color: #38bdf8; display: flex; align-items: center; gap: 10px; }
+        .nav-item { padding: 12px 14px; color: #9aa7bf; text-decoration: none; border-radius: 8px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .nav-item:hover { background: #152036; color: #fff; }
+        .nav-item.active { background: #1b2a4a; color: #fff; }
+
+        .main { flex: 1; padding: 24px 28px; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 1.6rem; }
+        .sub { color: var(--muted); font-size: 0.9rem; }
+        .btn { padding: 8px 14px; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; transition: .2s; }
+        .btn:hover { background: #f8fafc; transform: translateY(-1px); }
+
+        .card { background: var(--card); padding: 18px; border-radius: 12px; box-shadow: 0 6px 14px -8px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; margin-bottom: 20px; }
+        .card:hover { box-shadow: 0 10px 24px -12px rgba(0,0,0,0.3); }
+        .card h3 { margin: 0 0 8px 0; }
+
+        /* Funnel */
+        .funnel-container { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 20px 0 10px; }
+        .funnel-step { text-align: center; color: white; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 4px; transition: 0.3s; height: 60px; }
+        .funnel-step:hover { transform: scale(1.02); }
+        .step-1 { width: 80%; background: #3b82f6; clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%); }
+        .step-2 { width: 65%; background: #6366f1; clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%); }
+        .step-3 { width: 50%; background: #8b5cf6; clip-path: polygon(0 0, 100% 0, 85% 100%, 15% 100%); }
+        .step-4 { width: 35%; background: #d946ef; clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%); border-radius: 0 0 8px 8px; }
+        .funnel-label { font-weight: 800; font-size: 1.05rem; }
+        .funnel-sub { font-size: 0.85rem; opacity: 0.95; }
+        .conversion-rate { position: absolute; right: -120px; color: var(--muted); font-size: 0.9rem; font-weight: 700; top: 20px; }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; color: var(--muted); font-weight: 700; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+        tr:hover td { background: #f8fafc; }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+          .conversion-rate { position: static; margin-top: 6px; }
+        }
+        @media (max-width: 720px) {
+          .sidebar { position: fixed; z-index: 20; transform: translateX(-100%); transition: .3s; }
+          .sidebar.open { transform: translateX(0); }
+          .main { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <h2><i class="fa-solid fa-heart-pulse"></i> 正和生醫</h2>
+        <a href="module_a.html" class="nav-item"><i class="fa-solid fa-chart-line"></i> 營運與財務 (A)</a>
+        <a href="module_b.html" class="nav-item"><i class="fa-solid fa-user-clock"></i> 產能分析 (B)</a>
+        <a href="module_c.html" class="nav-item active"><i class="fa-solid fa-users"></i> 客戶結構 (C)</a>
+        <a href="module_d.html" class="nav-item"><i class="fa-solid fa-list-check"></i> 名單管理 (D)</a>
+        <a href="module_e.html" class="nav-item"><i class="fa-solid fa-bullhorn"></i> 行銷成效 (E)</a>
+        <a href="module_crm_core.html" class="nav-item"><i class="fa-solid fa-headset"></i> CRM 核心</a>
+    </div>
+
+    <div class="main">
+        <div class="header">
+            <div>
+                <h1>客戶結構與留存漏斗</h1>
+                <div class="sub">統計區間：2023 全年度 | 首訪於此期間的客戶</div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button class="btn" id="toggleMenu" title="開合側邊選單"><i class="fa-solid fa-bars"></i></button>
+                <button class="btn" id="exportC"><i class="fa-regular fa-file-excel"></i> 匯出名單</button>
+            </div>
+        </div>
+
+        <!-- C-1: Retention Funnel -->
+        <div class="card">
+            <h3 style="margin-top: 0;">C-1 新客留存漏斗</h3>
+            <p class="sub">以首次來館客為基準的留存轉化視圖</p>
+            <div class="funnel-container">
+                <div class="funnel-step step-1">
+                    <span class="funnel-label">總新客數 (來館 1次)</span>
+                    <span class="funnel-sub">1,200 人</span>
+                    <span class="conversion-rate">↓ 42% 回訪率</span>
+                </div>
+                <div class="funnel-step step-2">
+                    <span class="funnel-label">回訪客 (來館 ≥2次)</span>
+                    <span class="funnel-sub">504 人</span>
+                    <span class="conversion-rate">↓ 60% 留存率</span>
+                </div>
+                <div class="funnel-step step-3">
+                    <span class="funnel-label">常客 (來館 ≥6次)</span>
+                    <span class="funnel-sub">302 人</span>
+                    <span class="conversion-rate">↓ 33% 轉粉率</span>
+                </div>
+                <div class="funnel-step step-4">
+                    <span class="funnel-label">核心粉絲 (來館 ≥11次)</span>
+                    <span class="funnel-sub">100 人</span>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 10px; color: var(--danger);">
+                <i class="fa-solid fa-user-minus"></i> 流失客數（僅1次且 >90 天未回）：<strong>696 人（58%）</strong>
+            </div>
+        </div>
+
+        <!-- C-3: Customer Source -->
+        <div class="card">
+            <h3>C-3 客源結構分析</h3>
+            <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 280px;">
+                    <table>
+                        <tr>
+                            <th style="padding-left:10px;">來源標籤</th>
+                            <th>人數</th>
+                            <th>營收貢獻</th>
+                        </tr>
+                        <tr>
+                            <td style="padding-left:10px;">網路廣告 (FB/IG)</td>
+                            <td>450</td>
+                            <td>$800,000</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-left:10px;">親友介紹 (MGM)</td>
+                            <td>300</td>
+                            <td>$950,000</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-left:10px;">過路客</td>
+                            <td>120</td>
+                            <td>$150,000</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-left:10px;">企業特約</td>
+                            <td>80</td>
+                            <td>$400,000</td>
+                        </tr>
+                    </table>
+                </div>
+                <div style="width: 320px; background: #f8fafc; padding: 16px; border-radius: 8px; border:1px solid #e2e8f0;">
+                    <h4 style="margin:0 0 8px 0;">分析洞察</h4>
+                    <p style="font-size: 0.9rem; color: var(--muted); margin:0;">
+                        「親友介紹」客群人數非最高，但營收貢獻最高，顯示其 LTV（終身價值）較高。建議：
+                    </p>
+                    <ul style="margin:8px 0 0 18px; color: var(--muted); font-size:0.9rem;">
+                        <li>優化 MGM 推薦獎勵（雙邊獎勵、有效期）</li>
+                        <li>針對 MGM 客群設計週期型方案（季度/半年包）</li>
+                        <li>整合客服 CRM，追蹤二訪轉化話術與節點</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      // 側邊選單切換（行動裝置）
+      const toggleMenu = document.getElementById('toggleMenu');
+      const sidebar = document.getElementById('sidebar');
+      toggleMenu?.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+      });
+
+      // 匯出原型提示
+      document.getElementById('exportC')?.addEventListener('click', () => {
+        alert('原型功能：將匯出符合篩選條件的客戶名單（尚未串接資料）。');
+      });
+    </script>
+</body>
+</html>
